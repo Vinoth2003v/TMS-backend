@@ -107,7 +107,17 @@ public class SecurityConfig {
                 "Authorization",
                 "Content-Type",
                 "X-Requested-With",
-                "Accept"
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+            )
+        );
+
+        configuration.setExposedHeaders(
+            Arrays.asList(
+                "Authorization",
+                "Content-Type"
             )
         );
 

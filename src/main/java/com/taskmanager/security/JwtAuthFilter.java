@@ -34,13 +34,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
 
-        String path = request.getServletPath();
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
 
-        return request.getMethod().equalsIgnoreCase("OPTIONS")
-                || path.equals("/auth/login")
-                || path.equals("/auth/register")
-                || path.equals("/api/auth/login")
-                || path.equals("/api/auth/register");
+        String path = request.getServletPath();
+        String uri = request.getRequestURI();
+
+        return (path != null && (
+                path.startsWith("/api/auth/") ||
+                path.startsWith("/auth/") ||
+                path.equals("/api/auth/login") ||
+                path.equals("/api/auth/register") ||
+                path.equals("/auth/login") ||
+                path.equals("/auth/register")
+        )) || (uri != null && (
+                uri.contains("/api/auth/") ||
+                uri.contains("/auth/")
+        ));
     }
 
     @Override
@@ -49,6 +60,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         final String authHeader =
                 request.getHeader("Authorization");
@@ -61,7 +77,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.substring(7).trim();
+        if (token.isEmpty() || "null".equalsIgnoreCase(token) || "undefined".equalsIgnoreCase(token)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         try {
 
